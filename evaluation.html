@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5. Évaluation des soins</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      height: 100vh;
+      background-color: #f3f4f6;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #1e2a38;
+      color: white;
+      padding: 1rem;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+    }
+    .sidebar.collapsed {
+      width: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .sidebar h2 {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+    .sidebar ul {
+      list-style: none;
+    }
+    .sidebar ul li {
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #2a3b4c;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .sidebar ul li:hover {
+      background-color: #3d5a73;
+    }
+    .main {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      position: relative;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .menu-toggle {
+      font-size: 28px;
+      cursor: pointer;
+      color: #3d5a73;
+      margin-right: 1rem;
+    }
+    .user-box {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .user-box i {
+      font-size: 32px;
+      margin-right: 8px;
+      color: #3d5a73;
+    }
+    .logout-menu {
+      position: absolute;
+      top: 40px;
+      right: 0;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .user-box:hover .logout-menu {
+      display: block;
+    }
+    h1 {
+      color: #1e2a38;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .objectif-item {
+      background-color: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .objectif-titre {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      color: #1e2a38;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btns-objectif {
+      display: flex;
+      gap: 10px;
+    }
+    .btns-objectif button {
+      font-weight: bold;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    .btn-atteint {
+      background-color: #10b981;
+    }
+    .btn-non-atteint {
+      background-color: #ef4444;
+    }
+    .interventions-list {
+      margin-top: 10px;
+      margin-left: 15px;
+      font-size: 0.95rem;
+      color: #374151;
+    }
+    .interventions-list p {
+      margin: 3px 0;
+    }
+    .footer-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      padding: 0 10px;
+    }
+    .footer-buttons button {
+      padding: 10px 24px;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      color: white;
+      background-color: #3d5a73;
+    }
+    .footer-buttons button:hover {
+      background-color: #1e40af;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <h2>Liste des patients</h2>
+    <ul id="patient-list"></ul>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <span class="material-icons menu-toggle" onclick="toggleSidebar()">menu</span>
+      <h1>Évaluation des soins</h1>
+      <div class="user-box">
+        <i class="material-icons">account_circle</i>
+        <span id="username"></span>
+        <div class="logout-menu" onclick="logout()">Se déconnecter</div>
+      </div>
+    </div>
+
+    <div id="objectifs-container">
+      <!-- الأهداف ستظهر هنا -->
+    </div>
+
+    <div class="footer-buttons">
+      <button onclick="goBack()">⟵ Retour</button>
+      <button onclick="goNext()">Suivant ⟶</button>
+    </div>
+  </div>
+
+  <script>
+    const username = localStorage.getItem('username') || 'Utilisateur';
+    document.getElementById('username').textContent = username;
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    }
+
+    function logout() {
+      localStorage.removeItem('username');
+      window.location.href = 'login.html';
+    }
+
+    // تحميل المرضى في القائمة الجانبية
+    const patients = JSON.parse(localStorage.getItem('patients') || '[]');
+    const patientList = document.getElementById('patient-list');
+    patients.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = `${p.prenom} ${p.nom}`;
+      patientList.appendChild(li);
+    });
+
+    // استرجاع اسم المريض الحالي
+    const selectedPatient = JSON.parse(localStorage.getItem('selectedPatient'));
+    const patientNom = selectedPatient ? `${selectedPatient.prenom} ${selectedPatient.nom}` : null;
+
+    // استرجاع التدخلات والأهداف من التخزين
+    const interventions = JSON.parse(localStorage.getItem('interventions') || '[]');
+    const objectifs = [];
+
+    // جمع الأهداف القصيرة، المتوسطة، والطويلة للمريض الحالي
+    if (patientNom) {
+      // اجمع الأهداف من التدخلات الخاصة بالمريض فقط
+      interventions.forEach(intervention => {
+        if (intervention.patientNom === patientNom && intervention.approved) {
+          if (!objectifs.includes(intervention.objectif)) {
+            objectifs.push(intervention.objectif);
+          }
+        }
+      });
+    }
+
+    // لأغراض العرض، بما أنه لم نحتفظ بالأهداف في التدخلات بشكل مباشر، يمكننا استخراجها من localStorage
+    // أو من التخزين السابق (مثلا 'objectifsSoins') إذا متوفرة
+    // إذا لم تتوفر، يمكننا عرض التشخيصات بدلاً من الأهداف
+
+    // للعرض المبسط، هنا نستخدم الأهداف القصيرة والمتوسطة والطويلة لكل تشخيص
+    const objectifsFromStorage = JSON.parse(localStorage.getItem('objectifsSoins') || '{}');
+
+    // بناء قائمة الأهداف (مجموعة من جميع الأهداف القصيرة والمتوسطة والطويلة لكل تشخيص)
+    const objectifsSet = new Set();
+    Object.values(objectifsFromStorage).forEach(obj => {
+      ['court', 'moyen', 'long'].forEach(duree => {
+        if (obj[duree]) objectifsSet.add(obj[duree]);
+      });
+    });
+
+    // تحويل set إلى array
+    const objectifsArray = Array.from(objectifsSet);
+
+    // عناصر DOM
+    const container = document.getElementById('objectifs-container');
+
+    // دالة إنشاء عنصر هدف مع أزرار التصديق
+    function createObjectifElement(objectif) {
+      const div = document.createElement('div');
+      div.className = 'objectif-item';
+
+      div.innerHTML = `
+        <div class="objectif-titre">
+          <span>${objectif}</span>
+          <div class="btns-objectif">
+            <button class="btn-atteint">Atteint ✔</button>
+            <button class="btn-non-atteint">Non atteint ❌</button>
+          </div>
+        </div>
+        <div class="interventions-list">
+          <strong>Interventions:</strong>
+          <p>Liste des interventions liées à cet objectif ici.</p>
+          <strong>Remarques:</strong>
+          <textarea placeholder="Ajouter des remarques..."></textarea>
+        </div>
+      `;
+
+      // أزرار الحدث
+      const btnAtteint = div.querySelector('.btn-atteint');
+      const btnNonAtteint = div.querySelector('.btn-non-atteint');
+
+      btnAtteint.onclick = () => {
+        alert('Merci pour votre travail !');
+      };
+
+      btnNonAtteint.onclick = () => {
+        alert('Données sauvegardées. Vous serez redirigé.');
+        window.location.href = 'reajust.html';
+      };
+
+      return div;
+    }
+
+    // عرض كل الأهداف
+    objectifsArray.forEach(obj => {
+      container.appendChild(createObjectifElement(obj));
+    });
+
+    function goBack() {
+      window.location.href = 'execution.html';
+    }
+    function goNext() {
+      window.location.href = 'reajust.html';
+    }
+  </script>
+</body>
+</html>

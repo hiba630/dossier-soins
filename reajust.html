@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>7. Réajustement des soins</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { display: flex; height: 100vh; background-color: #f3f4f6; }
+    .sidebar {
+      width: 250px; background-color: #1e2a38; color: white; padding: 1rem; overflow-y: auto; transition: width 0.3s ease;
+    }
+    .sidebar.collapsed {
+      width: 0; padding: 0; overflow: hidden;
+    }
+    .sidebar h2 { margin-bottom: 1rem; font-size: 1.2rem; }
+    .sidebar ul { list-style: none; padding: 0; }
+    .sidebar ul li {
+      padding: 10px; margin-bottom: 10px; background-color: #2a3b4c;
+      border-radius: 8px; cursor: pointer; transition: background 0.3s;
+    }
+    .sidebar ul li:hover { background-color: #3d5a73; }
+    .main {
+      flex: 1; padding: 2rem; overflow-y: auto; position: relative;
+    }
+    .top-bar {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .menu-toggle {
+      font-size: 28px; cursor: pointer; color: #3d5a73;
+    }
+    .user-box {
+      display: flex; align-items: center; cursor: pointer; position: relative;
+    }
+    .user-box i {
+      font-size: 32px; margin-right: 8px; color: #3d5a73;
+    }
+    .logout-menu {
+      position: absolute; top: 40px; right: 0; background-color: white;
+      border: 1px solid #ccc; padding: 8px 12px; border-radius: 8px; display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .user-box:hover .logout-menu { display: block; }
+    h1 {
+      color: #1e2a38; margin-bottom: 1rem;
+    }
+    .section {
+      background: white; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      margin-bottom: 1rem; color: #1e2a38; border-bottom: 2px solid #3d5a73; padding-bottom: 4px;
+    }
+    .info-item {
+      margin-bottom: 8px;
+      font-size: 1rem;
+      color: #344054;
+    }
+    .list-inline {
+      list-style: none;
+      padding-left: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 1rem;
+      color: #344054;
+    }
+    .list-inline li {
+      background: #e6f7ff;
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px solid #3d5a73;
+    }
+    .diagnostic-block {
+      margin-bottom: 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 1rem;
+      background: #f9fafb;
+    }
+    .diagnostic-block h3 {
+      margin-bottom: 0.8rem;
+      color: #1e2a38;
+    }
+    .goal-list {
+      list-style: none;
+      padding-left: 1rem;
+      margin-bottom: 1rem;
+    }
+    .goal-list li {
+      margin-bottom: 0.4rem;
+      color: #475569;
+    }
+    .intervention-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .intervention-table th, .intervention-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .intervention-table th {
+      background-color: #e2e8f0;
+      color: #1e2a38;
+    }
+    .approved {
+      color: #16a34a;
+      font-weight: bold;
+    }
+    .not-approved {
+      color: #dc2626;
+      font-weight: bold;
+    }
+    .footer-buttons {
+      display: flex; justify-content: space-between; margin-top: 20px;
+    }
+    .footer-buttons button {
+      padding: 10px 24px;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      background-color: #3d5a73;
+      transition: background-color 0.3s;
+    }
+    .footer-buttons button:hover {
+      background-color: #1e40af;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <h2>Liste des patients</h2>
+    <ul id="patient-list"></ul>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <span class="material-icons menu-toggle" onclick="toggleSidebar()">menu</span>
+      <h1>7. Réajustement des soins</h1>
+      <div class="user-box">
+        <i class="material-icons">account_circle</i>
+        <span id="username"></span>
+        <div class="logout-menu" onclick="logout()">Se déconnecter</div>
+      </div>
+    </div>
+
+    <div class="section" id="patientInfoSection">
+      <h2>Informations sur le patient</h2>
+      <div id="patientInfo"></div>
+    </div>
+
+    <div class="section" id="besoinsSection">
+      <h2>Besoins sélectionnés</h2>
+      <ul id="besoinsList" class="list-inline"></ul>
+    </div>
+
+    <div class="section" id="diagnosticsSection">
+      <h2>Diagnostics infirmiers sélectionnés</h2>
+      <ul id="diagnosticsList" class="list-inline"></ul>
+    </div>
+
+    <div class="section" id="objectifsSection">
+      <h2>Objectifs de soins</h2>
+      <div id="objectifsContainer"></div>
+    </div>
+
+    <div class="section" id="interventionsSection">
+      <h2>Interventions planifiées</h2>
+      <div id="interventionsContainer"></div>
+    </div>
+
+    <div class="footer-buttons">
+      <button onclick="window.location.href='execution.html'">← Retour</button>
+      <button onclick="window.location.href='demarche.html'">Correction →</button>
+    </div>
+  </div>
+
+<script>
+  const username = localStorage.getItem('username') || 'Utilisateur';
+  document.getElementById('username').textContent = username;
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  }
+  function logout() {
+    localStorage.removeItem('username');
+    window.location.href = 'login.html';
+  }
+
+  const patients = JSON.parse(localStorage.getItem('patients') || '[]');
+  const patientList = document.getElementById('patient-list');
+  patients.forEach(p => {
+    const li = document.createElement('li');
+    li.textContent = `${p.prenom} ${p.nom}`;
+    patientList.appendChild(li);
+  });
+
+  const selectedPatient = JSON.parse(localStorage.getItem('selectedPatient') || '{}');
+  const patientInfoDiv = document.getElementById('patientInfo');
+  if(selectedPatient && Object.keys(selectedPatient).length > 0){
+    const infoMap = {
+      'Nom complet': `${selectedPatient.prenom || ''} ${selectedPatient.nom || ''}`,
+      'Numéro de chambre': selectedPatient.chambre || '---',
+      'Âge / Date de naissance': selectedPatient.age || '---',
+      'Nationalité et langue': selectedPatient.nationalite || '---',
+      'Prise en charge sociale': selectedPatient.prise_charge || '---',
+      'Situation socio-professionnelle': selectedPatient.situation_pro || '---',
+      'Situation familiale': selectedPatient.situation_familiale || '---',
+      'Adresse': selectedPatient.adresse || '---',
+      'Éléments significatifs': selectedPatient.elements_significatifs || '---',
+      'Date d’entrée': selectedPatient.date_entree || '---',
+      'Motif d’hospitalisation': selectedPatient.motif_hosp || '---',
+      'Antécédents médicaux': selectedPatient.antecedents || '---',
+      'Allergies': selectedPatient.allergies || '---',
+      'Résumé hospitalisation': selectedPatient.resume_hosp || '---',
+      'Appareillage': selectedPatient.appareillage || '---',
+      'Devenir prévu': selectedPatient.devenir || '---',
+      'Médecin référent': selectedPatient.medecin_ref || '---',
+      'Observations / Notes': selectedPatient.notes || '---'
+    };
+    for(const [key,value] of Object.entries(infoMap)){
+      const div = document.createElement('div');
+      div.className = 'info-item';
+      div.innerHTML = `<strong>${key}:</strong> ${value}`;
+      patientInfoDiv.appendChild(div);
+    }
+  } else {
+    patientInfoDiv.textContent = "Aucune information patient sélectionnée.";
+  }
+
+  const besoinsSelectionnes = JSON.parse(localStorage.getItem('besoinsSelectionnes') || '[]');
+  const besoinsList = document.getElementById('besoinsList');
+  besoinsSelectionnes.forEach(besoin => {
+    const li = document.createElement('li');
+    li.textContent = besoin.nom;
+    besoinsList.appendChild(li);
+  });
+
+  const diagnosticFormule = (localStorage.getItem('diagnosticFormule') || '').split('\n').filter(Boolean);
+  const diagnosticsList = document.getElementById('diagnosticsList');
+  diagnosticFormule.forEach(diag => {
+    const li = document.createElement('li');
+    li.textContent = diag;
+    diagnosticsList.appendChild(li);
+  });
+
+  const objectifsSoins = JSON.parse(localStorage.getItem('objectifsSoins') || '{}');
+  const objectifsContainer = document.getElementById('objectifsContainer');
+  for(const diag of diagnosticFormule){
+    const objectifs = objectifsSoins[diag] || {court:'', moyen:'', long:''};
+    const div = document.createElement('div');
+    div.className = 'diagnostic-block';
+    div.innerHTML = `
+      <h3>${diag}</h3>
+      <ul class="goal-list">
+        <li><strong>Court terme:</strong> ${objectifs.court || '---'}</li>
+        <li><strong>Moyen terme:</strong> ${objectifs.moyen || '---'}</li>
+        <li><strong>Long terme:</strong> ${objectifs.long || '---'}</li>
+      </ul>
+    `;
+    objectifsContainer.appendChild(div);
+  }
+
+  const interventions = JSON.parse(localStorage.getItem('interventions') || '[]');
+  const interventionsContainer = document.getElementById('interventionsContainer');
+  const patientNomComplet = `${selectedPatient.prenom || ''} ${selectedPatient.nom || ''}`.trim();
+  const patientInterventions = interventions.filter(i => i.patientNom === patientNomComplet);
+
+  patientInterventions.forEach(intervention => {
+    const div = document.createElement('div');
+    div.className = 'diagnostic-block';
+    div.innerHTML = `
+      <h3>Diagnostic: ${intervention.diagnostic}</h3>
+      <p><strong>Intervention:</strong> ${intervention.action}</p>
+      <p><strong>Fréquence:</strong> ${intervention.frequence}h</p>
+      <p><strong>Validé:</strong> <span class="${intervention.approved ? 'approved' : 'not-approved'}">${intervention.approved ? 'Oui' : 'Non'}</span></p>
+      <p><strong>Par:</strong> ${intervention.approved ? intervention.validatedBy || 'Inconnu' : '—'}</p>
+      <p><strong>Date:</strong> ${intervention.date || '—'}</p>
+    `;
+    interventionsContainer.appendChild(div);
+  });
+</script>
+</body>
+</html>
